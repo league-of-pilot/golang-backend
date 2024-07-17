@@ -16,4 +16,17 @@ migrateup:
 migratedown:
 	migrate -path db/migration -database "$(DB_URL)" -verbose down
 
-.PHONY: postgres createdb dropdb migrateup migratedown 
+# ko setup động với window powershell được, 
+# đã thử Get-Location, %%cd%%, $(PWD) thì không được
+DIR := D:\myCode\goback
+# SQLC = docker run --rm -v $(DIR):/src -w /src sqlc/sqlc
+# gosq:
+# 	$(SQLC) $(ARGS)
+
+gosql:
+	docker run --rm -v $(DIR):/src -w /src sqlc/sqlc generate
+
+gotest:
+	go test -v -cover ./...
+
+.PHONY: postgres createdb dropdb migrateup migratedown gosql gotest
