@@ -70,5 +70,11 @@ migrate -path db/migration -database "postgres://root:secret@localhost:5432/simp
 ```bash
 make gosql
 go mod init simplebank
+go mod tidy
+# tidy lại go.mod
+go get github.com/lib/pq
+
+
+go test ./db/sqlc/ -timeout 30s -v -run ^TestMain$
 
 ```
