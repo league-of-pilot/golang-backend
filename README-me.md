@@ -73,8 +73,12 @@ go mod init simplebank
 go mod tidy
 # tidy lại go.mod
 go get github.com/lib/pq
-
+go get github.com/stretchr/testify
 
 go test ./db/sqlc/ -timeout 30s -v -run ^TestMain$
 
 ```
+
+Trong VScode, ngay trên function test hoặc đầu file test sẽ có button test để click
+Chạy package test sẽ có %coverage
+Trong file gốc ứng với file test sẽ được tô green phần đã cover
