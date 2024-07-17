@@ -61,4 +61,14 @@ docker logs gostgres12
 migrate -version
 migrate create -ext sql -dir db/migration -seq init_schema
 migrate -path db/migration -database "postgres://root:secret@localhost:5432/simple_bank?sslmode=disable" up
+
+
+```
+
+# with make command setup
+
+```bash
+make gosql
+go mod init simplebank
+
 ```
