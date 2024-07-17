@@ -26,4 +26,7 @@ DIR := D:\myCode\goback
 gosql:
 	docker run --rm -v $(DIR):/src -w /src sqlc/sqlc generate
 
-.PHONY: postgres createdb dropdb migrateup migratedown gosql
+gotest:
+	go test -v -cover ./...
+
+.PHONY: postgres createdb dropdb migrateup migratedown gosql gotest
