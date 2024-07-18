@@ -55,6 +55,9 @@ type TransferTxResult struct {
 	ToEntry     Entry    `json:"to_entry"`
 }
 
+var txKey = struct{}{}
+var DEBUG = true
+
 // TransferTx performs a money transfer from one account to the other.
 // It creates the transfer, add account entries, and update accounts' balance within a database transaction
 func (store *Store) TransferTx(ctx context.Context, arg TransferTxParams) (TransferTxResult, error) {
@@ -63,11 +66,19 @@ func (store *Store) TransferTx(ctx context.Context, arg TransferTxParams) (Trans
 	err := store.execTx(ctx, func(q *Queries) error {
 		var err error
 
+		txName := ctx.Value(txKey)
+		if DEBUG {
+			fmt.Print(txName, "Create transfer\n")
+		}
+
 		result.Transfer, err = q.CreateTransfer(ctx, CreateTransferParams(arg))
 		if err != nil {
 			return err
 		}
 
+		if DEBUG {
+			fmt.Print(txName, "Create entry 1\n")
+		}
 		result.FromEntry, err = q.CreateEntry(ctx, CreateEntryParams{
 			AccountID: arg.FromAccountID,
 			Amount:    -arg.Amount,
@@ -76,6 +87,9 @@ func (store *Store) TransferTx(ctx context.Context, arg TransferTxParams) (Trans
 			return err
 		}
 
+		if DEBUG {
+			fmt.Print(txName, "Create entry 2\n")
+		}
 		result.ToEntry, err = q.CreateEntry(ctx, CreateEntryParams{
 			AccountID: arg.ToAccountID,
 			Amount:    arg.Amount,
@@ -84,7 +98,48 @@ func (store *Store) TransferTx(ctx context.Context, arg TransferTxParams) (Trans
 			return err
 		}
 
+		// BAD - DEADLOCK IMPLEMENT
+		if DEBUG {
+			fmt.Print(txName, "Get account 1 for update\n")
+		}
+		account1, err := q.GetAccountForUpdate(ctx, arg.FromAccountID)
+		if err != nil {
+			return err
+		}
+
+		if DEBUG {
+			fmt.Print(txName, "Update account 1\n")
+		}
+		result.FromAccount, err = q.UpdateAccount(ctx, UpdateAccountParams{
+			ID:      account1.ID,
+			Balance: account1.Balance - arg.Amount,
+		})
+		if err != nil {
+			return err
+		}
+
+		if DEBUG {
+			fmt.Print(txName, "Get account 2 for update\n")
+		}
+		account2, err := q.GetAccountForUpdate(ctx, arg.ToAccountID)
+		if err != nil {
+			return err
+		}
+
+		if DEBUG {
+			fmt.Print(txName, "Update account 2\n")
+		}
+
+		result.ToAccount, err = q.UpdateAccount(ctx, UpdateAccountParams{
+			ID:      account2.ID,
+			Balance: account2.Balance + arg.Amount,
+		})
+		if err != nil {
+			return err
+		}
+
 		// TODO: update accounts' balance
+
 		return nil
 	})
 	return result, err

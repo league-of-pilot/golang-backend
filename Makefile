@@ -23,10 +23,15 @@ DIR := D:\myCode\goback
 # gosq:
 # 	$(SQLC) $(ARGS)
 
+TMP = $(shell pwd)
+
 gosql:
 	docker run --rm -v $(DIR):/src -w /src sqlc/sqlc generate
+
+gomql:
+	docker run --rm -v $(TMP):/src -w /src sqlc/sqlc generate
 
 gotest:
 	go test -v -cover ./...
 
-.PHONY: postgres createdb dropdb migrateup migratedown gosql gotest
+.PHONY: postgres createdb dropdb migrateup migratedown gosql gotest gomql echoo
